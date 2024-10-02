@@ -5,6 +5,10 @@
 
 uint8_t volatile condition = 0;
 
+uint8_t segment1A = 0b00111110;
+uint8_t segment1B = 0b01101011;
+
+
 void timer_init(void)
 {
     cli();
@@ -17,8 +21,8 @@ void timer_init(void)
 
 ISR(TCB1_INT_vect)
 {
-    uint8_t firstDigit = 0b11101011; // 1
-    uint8_t secondDigit = 0b01000100; 
+    uint8_t firstDigit = (segment1A | PIN7_bm); // 1
+    uint8_t secondDigit = segment1B; 
      
     if (condition % 2 == 0){
         spi_write(firstDigit);
