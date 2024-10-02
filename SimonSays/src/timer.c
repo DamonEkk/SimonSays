@@ -16,6 +16,12 @@ void timer_init(void)
     TCB1.CCMP = 16667;               // Set interval for 5 ms (16667 clocks @ 3.333 MHz)
     TCB1.INTCTRL = TCB_CAPT_bm;      // CAPT interrupt enable
     TCB1.CTRLA = TCB_ENABLE_bm;      // Enable
+
+    PORTB_DIRSET = PIN1_bm;
+    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
+    TCA0.SINGLE.PER = 0;
+    TCA0_SINGLE_CMP0 = 0; // buzzer set to 0
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
     sei();
 }
 

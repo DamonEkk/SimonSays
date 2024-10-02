@@ -13,6 +13,7 @@ int main(void){
     uart_init();
     spi_init();
     timer_init();
+    button_init();  
 
     while (1){  // Game loop
         
