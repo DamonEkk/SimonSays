@@ -24,10 +24,10 @@ void timer_init(void)
     TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
     sei();
 }
-
+ // write to 7 seg
 ISR(TCB1_INT_vect)
 {
-    uint8_t firstDigit = (segment1A | PIN7_bm); // 1
+    uint8_t firstDigit = (segment1A | PIN7_bm); // 1 use pin7_7 to change to left side of screen
     uint8_t secondDigit = segment1B; 
      
     if (condition % 2 == 0){
