@@ -18,45 +18,70 @@ char *name = "john";
 char *score = "10";
 
 void increaseFrequency(void){
-        if ((e_high >> 1 < MAX_HZ) && (c_sharp >> 1 < MAX_HZ) && (a_norm >> 1 < MAX_HZ) && (e_low >> 1 < MAX_HZ)){
-            c_sharp >>= 1;
-            a_norm >>= 1; 
-            e_low >>= 1;
+    if ((e_high >> 1 < MAX_HZ) && (c_sharp >> 1 < MAX_HZ) && (a_norm >> 1 < MAX_HZ) && (e_low >> 1 < MAX_HZ)){
+        c_sharp >>= 1;
+        a_norm >>= 1; 
+        e_low >>= 1;
+    }
+}
+
+void decreaseFrequency(void){
+    if ((e_high << 1 > MIN_HZ) && (c_sharp << 1 > MIN_HZ) && (a_norm << 1 > MIN_HZ) && (e_low << 1 > MIN_HZ)){
+        c_sharp <<= 1;
+        a_norm <<= 1; 
+        e_low <<= 1;
+    }
+}
+
+void Print_leaderboard(void){
+    for (uint8_t i = 0; i < SCORE_ROWS; i++){
+        if (!(high_scores[i][0] == NULL)){
+            printf("%s %s\n", high_scores[i][0], high_scores[i][1]);
         }
     }
+}
 
-    void decreaseFrequency(void){
-        if ((e_high << 1 > MIN_HZ) && (c_sharp << 1 > MIN_HZ) && (a_norm << 1 > MIN_HZ) && (e_low << 1 > MIN_HZ)){
-            c_sharp <<= 1;
-            a_norm <<= 1; 
-            e_low <<= 1;
+void Place_score(int row){
+    high_scores[row][0] = name;
+    high_scores[row][1] = score;
+}
+
+void Override_score(char *new_name, char *new_score, uint8_t position){
+    if ((position < SCORE_ROWS) && (!(high_scores[position][0] == NULL))){
+        char *temp_name = high_scores[position][0];
+        char *temp_score = high_scores[position][1];
+        
+        name = new_name;
+        score = new_score;
+        Place_score(position);
+        
+        position++;
+        Override_score(temp_name, temp_score, position);
+    }
+     else{
+        name = new_name;
+        score = new_score;
+        Place_score(position);
+        
+     }
+}
+
+void Check_score(void){
+    for (uint8_t i = 0; i < SCORE_ROWS; i++){
+        if (high_scores[i][0] == NULL){
+            Place_score(i);
+            printf("%s %s\n", high_scores[i][0], high_scores[i][1]);
+            break;
         }
-    }
-
-    void Place_score(int row){
-        high_scores[row][0] = name;
-        high_scores[row][1] = score;
-    }
-
-    void Override_score(char *new_score, uint8_t position){
+            
+        else if (atoi(score) > atoi(high_scores[i][1])){
+            Override_score(name, score, i);
+            break;
+        }
+            
         
     }
-
-    void Check_score(void){
-        for (uint8_t i = 0; i < SCORE_ROWS; i++){
-            if (high_scores[i][0] == NULL){
-                Place_score(i);
-                printf("%s %s\n", high_scores[i][0], high_scores[i][1]);
-                break;
-            }
-            
-            else if (atoi(score) > atoi(high_scores[i][1])){
-                Override_score(score, i);
-            }
-            
-        
-        }
-    }
+}
 
 
 int main(void){ 
