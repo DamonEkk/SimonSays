@@ -28,6 +28,7 @@ void timer_init(void)
 
     //3.33mhz 418 hz
     //1/418 = 0.00239 = 2.39 / 300 = 0.00796
+    // duty cycle needs to be 50%
 
     PORTB_DIRSET = PIN1_bm;
     TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
