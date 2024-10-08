@@ -20,6 +20,26 @@
 uint8_t sequence = 1;
 uint8_t xy = 18; 
 
+typedef enum {
+        START,
+        GAMEPLAY,
+        END,
+        FREQUENCY,
+        RESET,
+        SEED
+    } action;
+
+    typedef enum {
+        GENERATE,
+        INPUT,
+        PLAY,
+        SUCCESS,
+        FAIL
+    } gameplay_action;
+
+    action state = START;
+    uint8_t test = 0;
+
 
 /*
 Increases frequency by one octave and validates that hz stays in audible range.
@@ -57,37 +77,10 @@ void Print_leaderboard(void){
     }
 }
 
-
-int main(void){ 
-    // setup
-    uart_init();
-    spi_init();
-    timer_init();
-    button_init();  
-    High_score_init();
-    
-
-    // function list table 3
-    typedef enum {
-        START,
-        GAMEPLAY,
-        END,
-        FREQUENCY,
-        RESET,
-        SEED
-    } action;
-
-    typedef enum {
-        GENERATE,
-        INPUT,
-        PLAY,
-        SUCCESS,
-        FAIL
-    } gameplay_action;
-
-    action state = START;
-    uint8_t test = 0;
-
+/*
+ main gameplay loop
+*/
+void Gameplay_loop(){
     while (1){  // Game loop
 
     switch (state){
@@ -126,6 +119,18 @@ int main(void){
         
 
     }
+
+}
+
+int main(void){ 
+    // setup
+    uart_init();
+    spi_init();
+    timer_init();
+    button_init();  
+    High_score_init();
+    
+    Gameplay_loop();
 
     return 0;
 }

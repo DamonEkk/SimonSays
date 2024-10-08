@@ -26,6 +26,11 @@ void timer_init(void)
     TCB1.CTRLA = TCB_ENABLE_bm;      // Enable
 
 
+    TCB0.CTRLB = TCB_CNTMODE_INT_gc; // Configure TCB1 in periodic interrupt mode
+    TCB0.CCMP = 16667;               // Set interval for 5 ms (16667 clocks @ 3.333 MHz)
+    TCB0.INTCTRL = TCB_CAPT_bm;      // CAPT interrupt enable
+    TCB0.CTRLA = TCB_ENABLE_bm;
+
     //3.33mhz 418 hz
     //1/418 = 0.00239 = 2.39 / 300 = 0.00796
     // duty cycle needs to be 50%
