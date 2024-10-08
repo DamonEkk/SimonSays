@@ -151,6 +151,14 @@ int main(void){
         SEED
     } action;
 
+    typedef enum {
+        GENERATE,
+        INPUT,
+        PLAY,
+        SUCCESS,
+        FAIL
+    } gameplay_action;
+
     action state = START;
     uint8_t test = 0;
 
