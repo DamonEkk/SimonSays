@@ -2,14 +2,14 @@
 #include "timer.h"
 #include "spi.h"
 #include "button.h"
+#include "high_score.h"
 
 #include <stdio.h>
 #include <stdint.h>
 
-
 #define MAX_HZ 20000
 #define MIN_HZ 20
-#define SCORE_ROWS 5
+
 
 //TODO
 // Button configuration
