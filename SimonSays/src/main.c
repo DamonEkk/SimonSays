@@ -74,7 +74,10 @@ void Print_leaderboard(void){
     for (uint8_t i = 0; i < SCORE_ROWS; i++){
         // prints each row that is not null
         if (!(high_scores[i][0] == NULL)){
-            printf("%s %s\n", high_scores[i][0], high_scores[i][1]);
+            uart_puts(high_scores[i][0]);
+            uart_puts(" ");
+            uart_puts(high_scores[i][1]);
+            uart_puts("\n");
         }
     }
 }
@@ -101,8 +104,15 @@ void Gameplay_loop(){
 
     switch (state){
         case START:
-            if ((pb_falling_edge & PIN4_bm) || (pb_falling_edge & PIN5_bm) || (pb_falling_edge & PIN6_bm) || (pb_falling_edge & PIN7_bm)){
+            if (previous_state != sample){
+                uart_puts("Change detected\n");
+            }
+            else{
+                //uart_puts("Same value\n");
+            }
+            if ((pb_falling_edge & PIN4_bm) | (pb_falling_edge & PIN5_bm) | (pb_falling_edge & PIN6_bm) | (pb_falling_edge & PIN7_bm)){
                 PORTB_OUTCLR = PIN5_bm; //on
+                uart_puts("work2");
                 
             }
 
@@ -150,7 +160,7 @@ int main(void){
     timer_init();
     button_init();  
     High_score_init();
-    
+    button_timer_init();
     Gameplay_loop();
 
     return 0;
