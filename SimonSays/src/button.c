@@ -1,7 +1,7 @@
 #include <avr/io.h>
 #include "timer.h"
 
-volatile uint8_t pb_debounced_state;
+volatile uint8_t pb_debounced_state = 0xFF;
 
 void button_init(void){
     PORTB_PIN4CTRL = PORT_PULLUPEN_bm; 

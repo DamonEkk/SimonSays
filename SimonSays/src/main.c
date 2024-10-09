@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <avr/io.h>
 
 #define MAX_HZ 20000
 #define MIN_HZ 20
@@ -38,6 +39,7 @@ typedef enum {
     } gameplay_action;
 
     action state = START;
+    gameplay_action game_state = GENERATE;
     uint8_t test = 0;
 
 
@@ -81,10 +83,29 @@ void Print_leaderboard(void){
  main gameplay loop
 */
 void Gameplay_loop(){
+    uint8_t sample = pb_debounced_state;
+    uint8_t previous_state = pb_debounced_state;
+    uint8_t pb_changed;
+    uint8_t pb_falling_edge;
+
     while (1){  // Game loop
+
+    
+    previous_state = sample;
+    sample = pb_debounced_state;
+    pb_changed = sample ^ previous_state; 
+    pb_falling_edge = pb_changed & previous_state;
+
+    PORTB_OUTSET = PIN5_bm; // sets led to off
+    PORTB_DIRSET = PIN5_bm; //set light as output
 
     switch (state){
         case START:
+            if ((pb_falling_edge & PIN4_bm) || (pb_falling_edge & PIN5_bm) || (pb_falling_edge & PIN6_bm) || (pb_falling_edge & PIN7_bm)){
+                PORTB_OUTCLR = PIN5_bm; //on
+                
+            }
+
         break;
 
         case GAMEPLAY:

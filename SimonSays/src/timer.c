@@ -35,11 +35,11 @@ void timer_init(void)
     //1/418 = 0.00239 = 2.39 / 300 = 0.00796
     // duty cycle needs to be 50%
 
-    PORTB_DIRSET = PIN1_bm;
-    TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
-    TCA0.SINGLE.PER = 0;
-    TCA0_SINGLE_CMP0 = 0; // buzzer set to 0
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
+    // PORTB_DIRSET = PIN1_bm;
+    // TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
+    // TCA0.SINGLE.PER = 0;
+    // TCA0_SINGLE_CMP0 = 0; // buzzer set to 0
+    // TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
     sei();
 }
  // write to 7 seg
