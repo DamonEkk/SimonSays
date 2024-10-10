@@ -12,6 +12,7 @@
 #define MIN_HZ 20
 
 
+
 //TODO
 // Button configuration
 // make 2darrayInit
@@ -91,6 +92,9 @@ void Gameplay_loop(){
     uint8_t pb_changed;
     uint8_t pb_falling_edge;
 
+    PORTB_OUTSET = PIN5_bm; // sets led to off
+    PORTB_DIRSET = PIN5_bm; //set light as output
+
     while (1){  // Game loop
 
     
@@ -99,21 +103,20 @@ void Gameplay_loop(){
     pb_changed = sample ^ previous_state; 
     pb_falling_edge = pb_changed & previous_state;
 
-    PORTB_OUTSET = PIN5_bm; // sets led to off
-    PORTB_DIRSET = PIN5_bm; //set light as output
 
     switch (state){
         case START:
-            if (previous_state != sample){
-                uart_puts("Change detected\n");
+            if (pb_falling_edge & PIN4_bm) {
+                Set_left_digit(SEGMENT_1);
+            } 
+            else if (pb_falling_edge & PIN5_bm) {
+                Set_left_digit(SEGMENT_2);
             }
-            else{
-                //uart_puts("Same value\n");
+            else if (pb_falling_edge & PIN6_bm) {
+                Set_right_digit(SEGMENT_1);
             }
-            if ((pb_falling_edge & PIN4_bm) | (pb_falling_edge & PIN5_bm) | (pb_falling_edge & PIN6_bm) | (pb_falling_edge & PIN7_bm)){
-                PORTB_OUTCLR = PIN5_bm; //on
-                uart_puts("work2");
-                
+            else if (pb_falling_edge & PIN7_bm){
+                Set_right_digit(SEGMENT_2);
             }
 
         break;
@@ -158,9 +161,9 @@ int main(void){
     uart_init();
     spi_init();
     timer_init();
+    button_timer_init();
     button_init();  
     High_score_init();
-    button_timer_init();
     Gameplay_loop();
 
     return 0;

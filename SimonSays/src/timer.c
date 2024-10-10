@@ -7,8 +7,6 @@
 volatile uint8_t condition = 0;
 volatile uint8_t pb_debounced_state = 0xFF;
 
-uint8_t segment1A = 0b00111110;
-uint8_t segment1B = 0b01101011;
 uint8_t clear = 0b11111111;
 
 //frequencies in hz
@@ -16,6 +14,14 @@ volatile uint16_t e_high = 313;
 volatile uint16_t c_sharp = 263;
 volatile uint16_t a_norm = 418;
 volatile uint16_t e_low = 157;
+
+volatile uint8_t firstDigit = 0b01111111; 
+volatile uint8_t secondDigit = 0b1111111;
+uint8_t time = 0;
+
+uint8_t SEGMENT_1 = 0b00111110;
+uint8_t SEGMENT_2 = 0b01101011;
+
 
 
 void timer_init(void){
@@ -29,7 +35,16 @@ void timer_init(void){
 
 void button_timer_init(void){
     cli();
-    TCA0.SINGLE.PER = 16667;
+    TCB0.CCMP = 16667;
+    TCB0.CTRLB = TCB_CNTMODE_INT_gc;
+    TCB0.INTCTRL = TCB_CAPT_bm;
+    TCB0.CTRLA = TCB_ENABLE_bm;   // Enable
+    sei();
+}
+
+void buzzer_init(void){
+    cli();
+    TCA0.SINGLE.PER = 33333;
     TCA0.SINGLE.CMP0 = 16667;
     TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm;
     TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
@@ -42,17 +57,36 @@ void button_timer_init(void){
     // duty cycle needs to be 50%
 
     // PORTB_DIRSET = PIN1_bm;
-    // TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
+    // TCA1.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm | TCA_SINGLE_CMP1EN_bm;
     // TCA0.SINGLE.PER = 0;
     // TCA0_SINGLE_CMP0 = 0; // buzzer set to 0
     // TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
     // sei();
 
  // write to 7 seg
-ISR(TCB1_INT_vect)
-{
-    uint8_t firstDigit = (segment1A | PIN7_bm); // 1 use pin7_7 to change to left side of screen
-    uint8_t secondDigit = segment1B; 
+
+void Set_left_digit(uint8_t digit){
+    firstDigit = (digit ^ PIN7_bm);
+
+    if (digit == SEGMENT_1 || digit == SEGMENT_2){
+        secondDigit = 0b1111111;
+    }
+}
+
+void Set_right_digit(uint8_t digit){
+    secondDigit = digit;
+    if (digit == SEGMENT_1 || digit == SEGMENT_2){
+        firstDigit = 0b01111111; 
+    }
+}
+
+ISR(TCB1_INT_vect){
+    time++;
+    if (time == 200){
+        uart_puts("One second passed\n");
+        time = 0;
+    }
+ 
      
     if (condition % 2 == 0){
         spi_write(firstDigit);
@@ -63,12 +97,10 @@ ISR(TCB1_INT_vect)
         condition++;
     }
     
-    
     TCB1.INTFLAGS = TCB_CAPT_bm; // clear flag
 }
 
-ISR(TCA0_CMP0_vect){
-    uart_puts("DETECTED");
+ISR(TCB0_INT_vect){
     static uint8_t countA = 0;
     static uint8_t countB = 0; 
     
@@ -80,6 +112,6 @@ ISR(TCA0_CMP0_vect){
 
     pb_debounced_state ^= (countB & countA) | (pb_changed & pb_debounced_state);
 
-    TCA0.SINGLE.INTFLAGS = TCA0_SINGLE_CMP0;
+    TCB0.INTFLAGS = TCB_CAPT_bm;
 }
 
