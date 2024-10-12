@@ -9,7 +9,7 @@ extern volatile uint8_t clock;
 extern volatile uint8_t time;
 extern uint8_t SEGMENT_1;
 extern uint8_t SEGMENT_2;
-extern CLEAR;
+extern uint8_t CLEAR;
 
 
 void timer_init(void);

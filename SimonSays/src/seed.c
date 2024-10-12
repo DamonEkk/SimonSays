@@ -11,7 +11,7 @@ uint32_t mask = 0xE2024CAB;
 
 
 
-volatile uint8_t sequence = 10;
+volatile uint8_t sequence = 1;
 
 void Set_seed(uint32_t seed){
     unique_seed = seed;
@@ -39,7 +39,7 @@ uint8_t Get_sequence(uint16_t cycles){
     return step;  
 }
 
-void Clear(void){
+void Clear_press(void){
     Set_left_digit(CLEAR);
     Set_right_digit(CLEAR);
     Set_buzzer(0);
@@ -74,9 +74,9 @@ void Screen_sequence(void){
 
         while (clock == clock_change);
         clock_change = clock;
-        Clear();
+        Clear_press();
         while (clock == clock_change);
         
     }
-    Clear();
+    Clear_press();
 }
