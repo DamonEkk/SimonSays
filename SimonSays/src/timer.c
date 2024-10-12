@@ -7,17 +7,17 @@
 volatile uint8_t condition = 0;
 volatile uint8_t pb_debounced_state = 0xFF;
 
-uint8_t clear = 0b11111111;
+uint8_t CLEAR = 0b11111111;
 
 //frequencies in hz
 volatile uint32_t e_high = 10657; //313
 volatile uint32_t c_sharp = 12673; // 263
 volatile uint32_t a_norm = 7973; // 418
 volatile uint32_t e_low = 21230; // 157
-
 volatile uint8_t firstDigit = 0b01111111; 
 volatile uint8_t secondDigit = 0b1111111;
-uint8_t time = 0;
+volatile uint8_t clock = 0;
+volatile uint8_t time = 0;
 
 uint8_t SEGMENT_1 = 0b00111110;
 uint8_t SEGMENT_2 = 0b01101011;
@@ -85,6 +85,9 @@ ISR(TCB1_INT_vect){
     time++;
     if (time == 200){
         uart_puts("One second passed\n");
+
+        // clock that cycles 1 and 0
+        clock ^= 0x1;
         time = 0;
     }
  
@@ -116,7 +119,13 @@ ISR(TCB0_INT_vect){
     TCB0.INTFLAGS = TCB_CAPT_bm;
 }
 
-void setBuzzer(uint32_t note){
+void Set_buzzer(uint32_t note){
+    if (note == 0){
+        TCA0.SINGLE.PERBUF = note;
+        TCA0.SINGLE.CMP0BUF = note;
+        return;
+    }
+
     TCA0.SINGLE.PERBUF = note;
     TCA0.SINGLE.CMP0BUF = note >> 1;
 }
