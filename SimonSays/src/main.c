@@ -108,15 +108,20 @@ void Gameplay_loop(){
         case START:
             if (pb_falling_edge & PIN4_bm) {
                 Set_left_digit(SEGMENT_1);
+                setBuzzer(e_high);
+                
             } 
             else if (pb_falling_edge & PIN5_bm) {
                 Set_left_digit(SEGMENT_2);
+                setBuzzer(c_sharp);
             }
             else if (pb_falling_edge & PIN6_bm) {
                 Set_right_digit(SEGMENT_1);
+                setBuzzer(a_norm);
             }
             else if (pb_falling_edge & PIN7_bm){
                 Set_right_digit(SEGMENT_2);
+                setBuzzer(e_low);
             }
 
         break;
@@ -164,6 +169,7 @@ int main(void){
     button_timer_init();
     button_init();  
     High_score_init();
+    buzzer_init();
     Gameplay_loop();
 
     return 0;

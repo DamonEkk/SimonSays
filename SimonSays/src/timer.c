@@ -10,10 +10,10 @@ volatile uint8_t pb_debounced_state = 0xFF;
 uint8_t clear = 0b11111111;
 
 //frequencies in hz
-volatile uint16_t e_high = 313;
-volatile uint16_t c_sharp = 263;
-volatile uint16_t a_norm = 418;
-volatile uint16_t e_low = 157;
+volatile uint32_t e_high = 10657; //313
+volatile uint32_t c_sharp = 12673; // 263
+volatile uint32_t a_norm = 7973; // 418
+volatile uint32_t e_low = 21230; // 157
 
 volatile uint8_t firstDigit = 0b01111111; 
 volatile uint8_t secondDigit = 0b1111111;
@@ -43,12 +43,13 @@ void button_timer_init(void){
 }
 
 void buzzer_init(void){
+    PORTB_DIRSET = PIN0_bm;
+    uart_puts("buzzer active");
     cli();
-    TCA0.SINGLE.PER = 33333;
-    TCA0.SINGLE.CMP0 = 16667;
+    TCA0.SINGLE.PERBUF = 0;
+    TCA0.SINGLE.CMP0BUF = 0;
     TCA0.SINGLE.CTRLB = TCA_SINGLE_WGMODE_SINGLESLOPE_gc | TCA_SINGLE_CMP0EN_bm;
-    TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;
-    TCA0.SINGLE.INTCTRL = TCA_SINGLE_CMP0_bm; // Set interval for 5 ms       
+    TCA0.SINGLE.CTRLA = TCA_SINGLE_ENABLE_bm;       
     sei();
 }
 
@@ -115,3 +116,7 @@ ISR(TCB0_INT_vect){
     TCB0.INTFLAGS = TCB_CAPT_bm;
 }
 
+void setBuzzer(uint32_t note){
+    TCA0.SINGLE.PERBUF = note;
+    TCA0.SINGLE.CMP0BUF = note >> 1;
+}
