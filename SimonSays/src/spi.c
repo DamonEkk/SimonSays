@@ -21,8 +21,6 @@ void spi_init(void){
 // Setter
 void spi_write(uint8_t data){
     SPI0.DATA = data;
-    
-    
 }
 
 // Getter

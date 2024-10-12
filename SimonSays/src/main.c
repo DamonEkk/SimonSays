@@ -19,7 +19,7 @@
 // seed
 // clock
 
-uint8_t sequence = 1;
+
 uint8_t xy = 18; 
 
 typedef enum {
