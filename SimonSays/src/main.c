@@ -84,6 +84,32 @@ void Print_leaderboard(void){
     }
 }
 
+void Stop_button(uint8_t pin){
+    uint8_t temp_clock;
+    uint8_t bit_unlock = 0;
+    time = 0;
+    temp_clock = clock;
+
+    while(1){
+        uint8_t sample = pb_debounced_state;
+
+        if (clock != temp_clock){
+            bit_unlock |= PIN0_bm;
+            uart_puts("clock\n");
+            }
+
+        if (sample == (sample | pin)){
+            bit_unlock |= PIN1_bm;
+            uart_puts("rising\n");
+        }
+                    
+        if (bit_unlock == 3){
+            break;
+        }
+    }
+
+}
+
 /*
  main gameplay loop
 */
@@ -92,64 +118,43 @@ void Gameplay_loop(){
     uint8_t previous_state = pb_debounced_state;
     uint8_t pb_changed;
     uint8_t pb_falling_edge;
-    uint8_t pb_rising_edge;
-    uint8_t temp_clock;
-    uint8_t bit_unlock;
 
     PORTB_OUTSET = PIN5_bm; // sets led to off
     PORTB_DIRSET = PIN5_bm; //set light as output
 
     while (1){  // Game loop
 
-    bit_unlock = 0;
     previous_state = sample;
     sample = pb_debounced_state;
     pb_changed = sample ^ previous_state; 
     pb_falling_edge = pb_changed & ~sample;
     
-
-
     switch (state){
         case START:
             if (pb_falling_edge & PIN4_bm) {
-                time = 0;
-                temp_clock = clock;
                 Set_left_digit(SEGMENT_1);
                 Set_buzzer(e_high);
-
-                // fix and make this a function that passes in the pin
-                while (1){
-                    sample = pb_debounced_state;
-                    
-
-                    if (clock != temp_clock){
-                        bit_unlock |= PIN0_bm;
-                        uart_puts("clock\n");
-                    }
-
-                    if (sample != previous_state){
-                        bit_unlock |= PIN1_bm;
-                        uart_puts("rising\n");
-                    }
-                    
-                    if (bit_unlock == 3){
-                        break;
-                    }
-                }
+                Stop_button(PIN4_bm);
                 Clear_press(); 
             } 
 
             else if (pb_falling_edge & PIN5_bm) {
                 Set_left_digit(SEGMENT_2);
                 Set_buzzer(c_sharp);
+                Stop_button(PIN5_bm);
+                Clear_press(); 
             }
             else if (pb_falling_edge & PIN6_bm) {
                 Set_right_digit(SEGMENT_1);
                 Set_buzzer(a_norm);
+                Stop_button(PIN6_bm);
+                Clear_press(); 
             }
             else if (pb_falling_edge & PIN7_bm){
                 Set_right_digit(SEGMENT_2);
                 Set_buzzer(e_low);
+                Stop_button(PIN7_bm);
+                Clear_press(); 
             }
 
         break;
