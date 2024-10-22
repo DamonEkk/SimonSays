@@ -21,3 +21,5 @@ void Set_left_digit(uint8_t digit);
 void Set_right_digit(uint8_t digit);
 
 void Set_buzzer(uint32_t note);
+
+void Set_perif(uint8_t left, uint8_t right, uint32_t note);

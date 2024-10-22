@@ -21,8 +21,6 @@
 // clock
 
 
-uint8_t xy = 18; 
-
 typedef enum {
         START,
         GAMEPLAY,
@@ -33,15 +31,14 @@ typedef enum {
     } action;
 
     typedef enum {
-        GENERATE,
         INPUT,
-        PLAY,
         SUCCESS,
+        GENERATE,
         FAIL
     } gameplay_action;
 
     action state = START;
-    gameplay_action game_state = GENERATE;
+    gameplay_action game_state = INPUT;
     uint8_t test = 0;
 
 
@@ -84,6 +81,11 @@ void Print_leaderboard(void){
     }
 }
 
+/*
+ Stops the effects of a button click after one clock cycle has passed or the user has let go of the button.
+
+ @param pin is used to determine which button was clicked
+ */
 void Stop_button(uint8_t pin){
     uint8_t temp_clock;
     uint8_t bit_unlock = 0;
@@ -107,7 +109,6 @@ void Stop_button(uint8_t pin){
             break;
         }
     }
-
 }
 
 /*
@@ -118,6 +119,7 @@ void Gameplay_loop(){
     uint8_t previous_state = pb_debounced_state;
     uint8_t pb_changed;
     uint8_t pb_falling_edge;
+    uint8_t current_count = 1;
 
     PORTB_OUTSET = PIN5_bm; // sets led to off
     PORTB_DIRSET = PIN5_bm; //set light as output
@@ -131,35 +133,87 @@ void Gameplay_loop(){
     
     switch (state){
         case START:
-            if (pb_falling_edge & PIN4_bm) {
-                Set_left_digit(SEGMENT_1);
-                Set_buzzer(e_high);
-                Stop_button(PIN4_bm);
-                Clear_press(); 
-            } 
-
-            else if (pb_falling_edge & PIN5_bm) {
-                Set_left_digit(SEGMENT_2);
-                Set_buzzer(c_sharp);
-                Stop_button(PIN5_bm);
-                Clear_press(); 
-            }
-            else if (pb_falling_edge & PIN6_bm) {
-                Set_right_digit(SEGMENT_1);
-                Set_buzzer(a_norm);
-                Stop_button(PIN6_bm);
-                Clear_press(); 
-            }
-            else if (pb_falling_edge & PIN7_bm){
-                Set_right_digit(SEGMENT_2);
-                Set_buzzer(e_low);
-                Stop_button(PIN7_bm);
-                Clear_press(); 
-            }
+            
 
         break;
 
         case GAMEPLAY:
+
+        switch (game_state){
+        case INPUT:
+
+            if (pb_falling_edge & PIN4_bm) {
+                Set_perif(SEGMENT_1, 0, e_high); // test
+                Stop_button(PIN4_bm);
+                Clear_press(); 
+
+                if (Compare_results(0, SEGMENT_1, current_count) == 0){
+                    current_count++;
+                    game_state = SUCCESS;
+                } else {
+                    current_count = 1;
+                    game_state = FAIL;
+                }
+            } 
+
+            else if (pb_falling_edge & PIN5_bm) {
+                Set_perif(SEGMENT_2, 0, c_sharp);
+                Stop_button(PIN5_bm);
+                Clear_press(); 
+
+                if (Compare_results(0, SEGMENT_2, current_count) == 0){
+                    current_count++;
+                    game_state = SUCCESS;
+                } else {
+                    current_count = 1;
+                    game_state = FAIL;
+                }
+            }
+
+            else if (pb_falling_edge & PIN6_bm) {
+                Set_perif(0, SEGMENT_1, a_norm);
+                Stop_button(PIN6_bm);
+                Clear_press(); 
+
+                if (Compare_results(1, SEGMENT_1, current_count) == 0){
+                    current_count++;
+                    game_state = SUCCESS;
+                } else {
+                    current_count = 1;
+                    game_state = FAIL;
+                }
+            }
+
+            else if (pb_falling_edge & PIN7_bm){
+                Set_perif(0, SEGMENT_2, e_low);
+                Stop_button(PIN7_bm);
+                Clear_press(); 
+
+                if (Compare_results(1, SEGMENT_2, current_count) == 0){
+                    current_count++;
+                    game_state = SUCCESS;
+                } else {
+                    current_count = 1;
+                    game_state = FAIL;
+                }
+            }
+
+            break;
+        
+        case SUCCESS:
+            break;
+
+        case GENERATE:
+            break;
+
+        case FAIL:
+            break;
+
+        default:
+            game_state = INPUT;
+            break;
+        }
+
         break;
 
         case END:

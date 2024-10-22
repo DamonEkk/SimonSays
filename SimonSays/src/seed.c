@@ -80,3 +80,32 @@ void Screen_sequence(void){
     }
     Clear_press();
 }
+ // screen side will be 0 for left and 1 for right
+uint8_t Compare_results(uint8_t screen_side, uint8_t user_result, uint16_t current_sequence){
+    uint8_t compare_val;
+    uint8_t correct_sequence = Get_sequence(current_sequence);
+
+    if (screen_side == 0){
+        if (user_result == SEGMENT_1){
+            compare_val = 0;
+        }
+        else{
+            compare_val = 1;
+        }
+    }
+    else if (screen_side == 1){
+        if (user_result == SEGMENT_1){
+            compare_val = 2;
+        }
+        else{
+            compare_val = 3;
+        }
+    }
+
+    if (compare_val == correct_sequence){
+        return 0;
+    } 
+    // sequence didnt match
+    return 1;
+
+}
