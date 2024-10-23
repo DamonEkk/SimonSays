@@ -20,10 +20,12 @@ void Set_seed(uint32_t seed){
 uint8_t Get_sequence(uint16_t cycles){
     uint8_t bit;
     uint8_t step;
-    if (unique_seed == 0){
-        uart_puts("seed set to student id");
-        unique_seed = student_id;
-    }
+    // if (unique_seed == 0){
+    //     uart_puts("seed set to student id");
+    //     unique_seed = student_id;
+    // }
+
+    unique_seed = student_id;
 
     for (uint8_t i = 0; i < cycles; i++){
         bit = unique_seed & PIN0_bm;
@@ -86,19 +88,24 @@ uint8_t Compare_results(uint8_t screen_side, uint8_t user_result, uint16_t curre
     uint8_t correct_sequence = Get_sequence(current_sequence);
 
     if (screen_side == 0){
+    
         if (user_result == SEGMENT_1){
             compare_val = 0;
+            uart_puts("0 compared\n");
         }
         else{
             compare_val = 1;
+            uart_puts("1 compared\n");
         }
     }
     else if (screen_side == 1){
         if (user_result == SEGMENT_1){
             compare_val = 2;
+            uart_puts("2 compared\n");
         }
         else{
             compare_val = 3;
+            uart_puts("3 compared\n");
         }
     }
 

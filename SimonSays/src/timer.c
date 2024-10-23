@@ -97,7 +97,7 @@ void Set_buzzer(uint32_t note){
 ISR(TCB1_INT_vect){
     time++;
     if (time == 200){
-        uart_puts("One second passed\n");
+        //uart_puts("One second passed\n");
 
         // clock that cycles 1 and 0
         clock ^= 0x1;

@@ -11,9 +11,9 @@ void uart_init(void)
     USART0.CTRLB = USART_RXEN_bm | USART_TXEN_bm; // Enable Tx/Rx
 
     // enable input
-    USART1.BAUD = 1389;
-    USART1.CTRLA = USART_RXCIE_bm;                           // 9600 baud @ 3.333 MHz
-    USART1.CTRLB = USART_RXEN_bm | USART_TXEN_bm; // Enable Tx/Rx
+    // USART1.BAUD = 1389;
+    // USART1.CTRLA = USART_RXCIE_bm;                           // 9600 baud @ 3.333 MHz
+    // USART1.CTRLB = USART_RXEN_bm | USART_TXEN_bm; // Enable Tx/Rx
 }
 
 char uart_getc(void)
