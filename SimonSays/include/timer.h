@@ -6,7 +6,7 @@ extern volatile uint32_t a_norm;
 extern volatile uint32_t e_low;
 extern volatile uint8_t pb_debounced_state;
 extern volatile uint8_t clock;
-extern volatile uint8_t time;
+extern volatile uint16_t time;
 extern uint8_t SEGMENT_1;
 extern uint8_t SEGMENT_2;
 extern uint8_t CLEAR;

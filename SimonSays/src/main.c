@@ -4,6 +4,7 @@
 #include "button.h"
 #include "high_score.h"
 #include "seed.h"
+#include "adc.h"
 
 #include <stdio.h>
 #include <stdint.h>
@@ -40,6 +41,20 @@ typedef enum {
     action state = START;
     gameplay_action game_state = INPUT;
     uint8_t test = 0;
+    uint8_t gg = 0b10000000;
+    uint8_t middle = 0b11110111;
+    uint8_t clock_change;
+
+    uint8_t zero = 0b00001000;
+    uint8_t one = 0b01101011;
+    uint8_t two = 0b01000100;
+    uint8_t three = 0b01000001;
+    uint8_t four = 0b00100011;
+    uint8_t five = 0b00010001;
+    uint8_t six = 0b00110111;
+    uint8_t seven = 0b01001011;
+    uint8_t eight = 0b10000000;
+    uint8_t nine = 0b00000011;
 
 
 /*
@@ -112,6 +127,42 @@ void Stop_button(uint8_t pin){
 }
 
 /*
+ gets the display digit binary value.
+
+ @param num, num you wish to get the digit to.
+ @return digit, display binary
+*/
+uint8_t Get_screen_digit(uint8_t num){
+    uint8_t digit;
+
+    switch (num){
+        case 0:
+            digit = zero;
+        case 1:
+            digit = one;
+        case 2:
+            digit = two;
+        case 3:
+            digit = three;
+        case 4:
+            digit = four;
+        case 5:
+            digit = five;
+        case 6:
+            digit = six;
+        case 7:
+            digit = seven;
+        case 8:
+            digit = eight;
+        case 9:
+            digit = nine;
+        default:
+            digit = zero;
+    }
+    return digit;
+}
+
+/*
  main gameplay loop
 */
 void Gameplay_loop(){
@@ -126,148 +177,191 @@ void Gameplay_loop(){
 
     while (1){  // Game loop
 
-    previous_state = sample;
-    sample = pb_debounced_state;
-    pb_changed = sample ^ previous_state; 
-    pb_falling_edge = pb_changed & ~sample;
-    
-    switch (state){
-        case START:
-            Screen_sequence();
-            state = GAMEPLAY;
+        previous_state = sample;
+        sample = pb_debounced_state;
+        pb_changed = sample ^ previous_state; 
+        pb_falling_edge = pb_changed & ~sample;
+        uint8_t left_side = 0;
+        
+        switch (state){
+            case START:
+                Screen_sequence();
+                game_state = INPUT;
+                state = GAMEPLAY;
 
-        break;
+            break;
 
-        case GAMEPLAY:
+            case GAMEPLAY:
 
-        switch (game_state){
-            case INPUT:
+            switch (game_state){
+                case INPUT:
 
-                if (pb_falling_edge & PIN4_bm) {
-                    Set_perif(SEGMENT_1, 0, e_high); // test
-                    Stop_button(PIN4_bm);
-                    Clear_press(); 
+                    if (pb_falling_edge & PIN4_bm) {
+                        Set_perif(SEGMENT_1, 0, e_high); // test
+                        Stop_button(PIN4_bm);
+                        Clear_press(); 
 
-                    if (Compare_results(0, SEGMENT_1, current_count) == 0){
-                        current_count++;
-                        uart_puts("compared\n");
-                        game_state = SUCCESS;
-                    } else {
-                        current_count = 1;
-                        uart_puts("fail\n");
-                        game_state = FAIL;
+                        if (Compare_results(0, SEGMENT_1, current_count) == 0){
+                            current_count++;
+                            uart_puts("compared\n");
+                            game_state = SUCCESS;
+                        } else {
+                            uart_puts("fail\n");
+                            game_state = FAIL;
+                        }
+                    } 
+
+                    else if (pb_falling_edge & PIN5_bm) {
+                        Set_perif(SEGMENT_2, 0, c_sharp);
+                        Stop_button(PIN5_bm);
+                        Clear_press(); 
+
+                        if (Compare_results(0, SEGMENT_2, current_count) == 0){
+                            current_count++;
+                            game_state = SUCCESS;
+                        } else {
+                            game_state = FAIL;
+                        }
                     }
-                } 
 
-                else if (pb_falling_edge & PIN5_bm) {
-                    Set_perif(SEGMENT_2, 0, c_sharp);
-                    Stop_button(PIN5_bm);
-                    Clear_press(); 
+                    else if (pb_falling_edge & PIN6_bm) {
+                        Set_perif(0, SEGMENT_1, a_norm);
+                        Stop_button(PIN6_bm);
+                        Clear_press(); 
 
-                    if (Compare_results(0, SEGMENT_2, current_count) == 0){
-                        current_count++;
-                        game_state = SUCCESS;
-                    } else {
-                        current_count = 1;
-                        game_state = FAIL;
+                        if (Compare_results(1, SEGMENT_1, current_count) == 0){
+                            current_count++;
+                            game_state = SUCCESS;
+                        } else {
+                            game_state = FAIL;
+                        }
                     }
-                }
 
-                else if (pb_falling_edge & PIN6_bm) {
-                    Set_perif(0, SEGMENT_1, a_norm);
-                    Stop_button(PIN6_bm);
-                    Clear_press(); 
+                    else if (pb_falling_edge & PIN7_bm){
+                        Set_perif(0, SEGMENT_2, e_low);
+                        Stop_button(PIN7_bm);
+                        Clear_press(); 
 
-                    if (Compare_results(1, SEGMENT_1, current_count) == 0){
-                        current_count++;
-                        game_state = SUCCESS;
-                    } else {
-                        current_count = 1;
-                        game_state = FAIL;
+                        if (Compare_results(1, SEGMENT_2, current_count) == 0){
+                            current_count++;
+                            game_state = SUCCESS;
+                        } else {
+                            game_state = FAIL;
+                        }
                     }
-                }
+                    break;
+                
+                case SUCCESS:
 
-                else if (pb_falling_edge & PIN7_bm){
-                    Set_perif(0, SEGMENT_2, e_low);
-                    Stop_button(PIN7_bm);
-                    Clear_press(); 
-
-                    if (Compare_results(1, SEGMENT_2, current_count) == 0){
-                        current_count++;
-                        game_state = SUCCESS;
-                    } else {
-                        current_count = 0;
-                        game_state = FAIL;
+                    if (current_count >= sequence){
+                        Set_perif(gg, gg, 0);
+                        time = 0;
+                        clock_change = clock;
+                        while (clock == clock_change);
+                        game_state = GENERATE;
                     }
-                }
+                    else{
+                        game_state = INPUT;
+                    }
+                    
+                    break;
 
-                break;
-            
-            case SUCCESS:
+                case GENERATE:
+                    sequence++;
+                    current_count = 0;
+                    Screen_sequence();
+                    game_state = INPUT;
+                    break;
+
+                case FAIL:
+                    Set_perif(middle, middle, 0);
+
+                    time = 0;
+                    clock_change = clock;
+                    while (clock == clock_change);
+                    // leaderboard needs to be displayed here
+
+                    // check if score is over 100 and gets rid of nums over 99.
+                    while (1){
+                        if (sequence >= 100){
+                            sequence -= 100;
+                        }
+                        break;
+                    }
+
+                    // Gets the tenth value and the left over becomes the right value
+                    while (1){
+                        if (sequence >= 90 && (!(sequence < 10))){
+                            left_side++;
+                            sequence -= 10;
+                        }
+                        break;
+                    }
+                    // left side will be left_side and right side will be sequence
+
+                    // display score
+                    if (left_side == 0){
+                        Set_perif(0, Get_screen_digit(sequence), 0);
+                    }
+                    else{
+                        Set_perif(Get_screen_digit(left_side), Get_screen_digit(sequence), 0);
+                    }
+
+                    // playback timer
+                    time = 0;
+                    clock_change = clock;
+                    while (clock == clock_change);
+                    state = END;
+                    break;
+
+                default:
+                    current_count = 0;
+                    sequence = 1;
+                    game_state = INPUT;
+                    break;
+            }
+
+            break;
+
+            case END:
                 time = 0;
                 uint8_t clock_change = clock;
                 while (clock == clock_change);
-
-                if (current_count >= sequence){
-                    game_state = GENERATE;
-                }
-                else{
-                    game_state = INPUT;
-                }
-                
-                break;
-
-            case GENERATE:
-                sequence++;
                 current_count = 0;
-                Screen_sequence();
+                sequence = 1;
                 game_state = INPUT;
-                break;
+                state = START;
+            break;
 
-            case FAIL:
-                break;
+            case FREQUENCY:
+            if (test == 1){
+                increaseFrequency();
+                test = 0;
+                state = GAMEPLAY;
+            }
+            else if (test == 2){
+                decreaseFrequency();
+                test = 0;
+                state = GAMEPLAY;
+            }
+            break;
+
+            case RESET:
+            break;
+
+            case SEED:
+            break;
 
             default:
-                game_state = INPUT;
-                break;
-            }
-
-        break;
-
-        case END:
-        break;
-
-        case FREQUENCY:
-        if (test == 1){
-            increaseFrequency();
-            test = 0;
-            state = GAMEPLAY;
+            state = START;
+            break;
         }
-        else if (test == 2){
-            decreaseFrequency();
-            test = 0;
-            state = GAMEPLAY;
-        }
-        break;
-
-        case RESET:
-        break;
-
-        case SEED:
-        break;
-
-        default:
-        state = START;
-        break;
     }
-        
-
-    }
-
 }
 
 int main(void){ 
     // setup
+    adc_init();
     uart_init();
     Clear_press();
     spi_init();
@@ -275,6 +369,7 @@ int main(void){
     button_timer_init();
     button_init();  
     High_score_init();
+
     buzzer_init();
     Gameplay_loop();
 
