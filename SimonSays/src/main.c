@@ -51,10 +51,10 @@ typedef enum {
     uint8_t three = 0b01000001;
     uint8_t four = 0b00100011;
     uint8_t five = 0b00010001;
-    uint8_t six = 0b00110111;
-    uint8_t seven = 0b01001011;
-    uint8_t eight = 0b10000000;
-    uint8_t nine = 0b00000011;
+    uint8_t six = 0b00010000;
+    uint8_t seven = 0b01011011;
+    uint8_t eight = 0b00000000;
+    uint8_t nine = 0b00000001;
 
 
 /*
@@ -138,26 +138,37 @@ uint8_t Get_screen_digit(uint8_t num){
     switch (num){
         case 0:
             digit = zero;
+            break;
         case 1:
             digit = one;
+            break;
         case 2:
             digit = two;
+            break;
         case 3:
             digit = three;
+            break;
         case 4:
             digit = four;
+            break;
         case 5:
             digit = five;
+            break;
         case 6:
             digit = six;
+            break;
         case 7:
             digit = seven;
+            break;
         case 8:
             digit = eight;
+            break;
         case 9:
             digit = nine;
+            break;
         default:
             digit = zero;
+            break;
     }
     return digit;
 }
