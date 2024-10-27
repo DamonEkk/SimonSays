@@ -13,15 +13,6 @@
 #define MAX_HZ 20000
 #define MIN_HZ 20
 
-
-
-//TODO
-// Button configuration
-// make 2darrayInit
-// seed
-// clock
-
-
 typedef enum {
         START,
         GAMEPLAY,
@@ -55,6 +46,7 @@ typedef enum {
     uint8_t seven = 0b01011011;
     uint8_t eight = 0b00000000;
     uint8_t nine = 0b00000001;
+
 
 
 /*
@@ -104,24 +96,26 @@ void Print_leaderboard(void){
 void Stop_button(uint8_t pin){
     uint8_t temp_clock;
     uint8_t bit_unlock = 0;
-    time = 0;
+    time = 0x0;
     temp_clock = clock;
+    counting = 1;
 
     while(1){
         uint8_t sample = pb_debounced_state;
 
         if (clock != temp_clock){
             bit_unlock |= PIN0_bm;
-            uart_puts("clock\n");
-            }
+            counting = 0;
+        }
 
-        if (sample == (sample | pin)){
+        if (sample &= pin){
             bit_unlock |= PIN1_bm;
-            //uart_puts("rising\n");
+            
         }
                     
         if (bit_unlock == 3){
-            break;
+            Clear_press();
+            return;
         }
     }
 }
@@ -181,7 +175,8 @@ void Gameplay_loop(){
     uint8_t previous_state = pb_debounced_state;
     uint8_t pb_changed;
     uint8_t pb_falling_edge;
-    uint8_t current_count = 0;
+    uint8_t pb_rising_edge;
+    uint8_t current_count = 1;
 
     PORTB_OUTSET = PIN5_bm; // sets led to off
     PORTB_DIRSET = PIN5_bm; //set light as output
@@ -192,32 +187,33 @@ void Gameplay_loop(){
         sample = pb_debounced_state;
         pb_changed = sample ^ previous_state; 
         pb_falling_edge = pb_changed & ~sample;
+        pb_rising_edge = pb_changed & sample;
         uint8_t left_side = 0;
         
         switch (state){
             case START:
-                Screen_sequence();
+                Screen_sequence(); // plays game results.
                 game_state = INPUT;
                 state = GAMEPLAY;
 
             break;
 
+            
             case GAMEPLAY:
 
             switch (game_state){
                 case INPUT:
 
+                    // waits for button press.
                     if (pb_falling_edge & PIN4_bm) {
-                        Set_perif(SEGMENT_1, 0, e_high); // test
-                        Stop_button(PIN4_bm);
-                        Clear_press(); 
+                        Set_perif(SEGMENT_1, 0, e_high); // sets display and buzzer
+                        Stop_button(PIN4_bm); // checks that the button has been activated for x amount of time.
 
-                        if (Compare_results(0, SEGMENT_1, current_count) == 0){
-                            current_count++;
-                            uart_puts("compared\n");
+                        if (Compare_results(0, SEGMENT_1, current_count) == 0){ // sends corrosponding button result and checks if that matched simon's result.
+                            current_count++; // increases users count.
+                            
                             game_state = SUCCESS;
                         } else {
-                            uart_puts("fail\n");
                             game_state = FAIL;
                         }
                     } 
@@ -225,7 +221,6 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN5_bm) {
                         Set_perif(SEGMENT_2, 0, c_sharp);
                         Stop_button(PIN5_bm);
-                        Clear_press(); 
 
                         if (Compare_results(0, SEGMENT_2, current_count) == 0){
                             current_count++;
@@ -238,7 +233,6 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN6_bm) {
                         Set_perif(0, SEGMENT_1, a_norm);
                         Stop_button(PIN6_bm);
-                        Clear_press(); 
 
                         if (Compare_results(1, SEGMENT_1, current_count) == 0){
                             current_count++;
@@ -251,8 +245,7 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN7_bm){
                         Set_perif(0, SEGMENT_2, e_low);
                         Stop_button(PIN7_bm);
-                        Clear_press(); 
-
+                         
                         if (Compare_results(1, SEGMENT_2, current_count) == 0){
                             current_count++;
                             game_state = SUCCESS;
@@ -262,34 +255,35 @@ void Gameplay_loop(){
                     }
                     break;
                 
+
                 case SUCCESS:
 
-                    if (current_count >= sequence){
+                    if (current_count > sequence){
                         Set_perif(gg, gg, 0);
-                        time = 0;
-                        clock_change = clock;
-                        while (clock == clock_change);
+                        Pause();
                         game_state = GENERATE;
                     }
                     else{
+                        Pause();
                         game_state = INPUT;
                     }
                     
                     break;
 
+
                 case GENERATE:
                     sequence++;
-                    current_count = 0;
+                    current_count = 1;
                     Screen_sequence();
                     game_state = INPUT;
                     break;
 
+
                 case FAIL:
                     Set_perif(middle, middle, 0);
 
-                    time = 0;
-                    clock_change = clock;
-                    while (clock == clock_change);
+                    uint8_t temp = Get_sequence(sequence, 1);
+                    Pause();
                     // leaderboard needs to be displayed here
 
                     // check if score is over 100 and gets rid of nums over 99.
@@ -319,14 +313,13 @@ void Gameplay_loop(){
                     }
 
                     // playback timer
-                    time = 0;
-                    clock_change = clock;
-                    while (clock == clock_change);
+                    
                     state = END;
                     break;
 
+
                 default:
-                    current_count = 0;
+                    current_count = 1;
                     sequence = 1;
                     game_state = INPUT;
                     break;
@@ -335,10 +328,8 @@ void Gameplay_loop(){
             break;
 
             case END:
-                time = 0;
-                uint8_t clock_change = clock;
-                while (clock == clock_change);
-                current_count = 0;
+                Pause();
+                current_count = 1;
                 sequence = 1;
                 game_state = INPUT;
                 state = START;
@@ -372,16 +363,17 @@ void Gameplay_loop(){
 
 int main(void){ 
     // setup
+    timer_init();
+    buzzer_init();
     adc_init();
     uart_init();
     Clear_press();
     spi_init();
-    timer_init();
     button_timer_init();
     button_init();  
     High_score_init();
 
-    buzzer_init();
+    
     Gameplay_loop();
 
     return 0;
