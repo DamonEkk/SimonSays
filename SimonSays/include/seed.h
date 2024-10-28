@@ -11,6 +11,8 @@ extern volatile uint8_t second_digit;
 extern uint8_t SEGMENT_1;
 extern uint8_t SEGMENT_2;
 extern uint8_t CLEAR;
+extern uint8_t loop_break;
+extern uint8_t current_sequence;
 
 
 void Set_seed(uint32_t seed);

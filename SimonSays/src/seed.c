@@ -21,7 +21,8 @@ volatile uint8_t second_digit = 0b1111111;
 
 uint8_t SEGMENT_1 = 0b00111110;
 uint8_t SEGMENT_2 = 0b01101011;
-uint8_t firstBuzz = 0;
+uint8_t current_sequence = 1;
+uint8_t screen_image;
 
 
 volatile uint8_t sequence = 1;
@@ -68,20 +69,8 @@ void Set_right_digit(uint8_t digit){
     @param note sets buzzer sound
 */
 void Set_buzzer(uint32_t note){
-    // if (firstBuzz == 0){
-    //     firstBuzz++;
-    // }
-    // else if (firstBuzz == 1){
-    //     time2 = 0;
-    //     counting2 = 1;
-    //     while (counting2 == 1);
-        
-            
-        
-    // }
-
+    
     if (note == 0){ // shifting cmp0buf if note == 0 could cause weird errors.
-        //TCA0.SINGLE.PERBUF = note;
         TCA0.SINGLE.CMP0BUF = note;
         return;
     }
@@ -153,39 +142,84 @@ void Clear_press(void){
     Set_perif(CLEAR, CLEAR, 0);
 }
 
+typedef enum{
+    VALUE,
+    SHOWING,
+    HIDING,
+    END
+} screening;
+
+screening screening_state = VALUE;
+
 /*
     Counts sequence amount of times and requests the current value's randomised number 
     displays that value to screen and continues until max sequence num.
 */
-void Screen_sequence(void){
-    for (int i = 1; i <= sequence; i++){ 
-        uint8_t Screen_image = Get_sequence(i, 0);
-        
-        if (Screen_image == 0){
-            Set_perif(SEGMENT_1, 0, e_high);
-            
+uint8_t Screen_sequence(void){
+    
+        switch (screening_state){
+            case VALUE:
+                //uart_puts("state VALUE\n");
+
+                screen_image = Get_sequence(current_sequence, 0);
+                
+                if (screen_image == 0){
+                    Set_perif(SEGMENT_1, 0, e_high);
+                    
+                }
+                else if (screen_image == 1){
+                    Set_perif(SEGMENT_2, 0, c_sharp);
+                    
+                }
+                else if (screen_image == 2){
+                    Set_perif(0, SEGMENT_1, a_norm);
+                    
+                }
+                else if (screen_image == 3){
+                    Set_perif(0, SEGMENT_2, e_low);
+                    
+                }
+
+                time2 = 0;
+                screening_state = SHOWING;
+                return 0;
+
+                break;
+
+            case SHOWING:
+            //uart_puts("state SHOWING\n");
+                if (time2 == 125){
+                    Clear_press();
+                    time2 = 0;
+                    screening_state = HIDING;
+                }
+                return 0;
+                break;
+            case HIDING:
+            //uart_puts("state HIDING\n");
+                if (time2 == 125){
+                    screening_state = END;
+                }
+                return 0;
+                break;
+            case END:
+            //uart_puts("state END\n");
+                if (current_sequence < sequence){
+                    current_sequence++;
+                    screening_state = VALUE;
+                }
+                else{
+                    current_sequence = 1;
+                    return 1;
+                }
+                return 0;
+                break;
+            default:
+                screening_state = VALUE;
+                break;
         }
-        else if (Screen_image == 1){
-            Set_perif(SEGMENT_2, 0, c_sharp);
-            
-        }
-        else if (Screen_image == 2){
-            Set_perif(0, SEGMENT_1, a_norm);
-            
-        }
-        else if (Screen_image == 3){
-            Set_perif(0, SEGMENT_2, e_low);
-            
-        }
-        time = 0;
-        half = 0;
-        counting = 1;
-        while (half == 0);
-        Clear_press();
-        while (counting == 1);
     }
-    //Clear_press();
-}
+
  
  /*
     checks the users result compared to the value displayed on screen.
@@ -200,6 +234,7 @@ void Screen_sequence(void){
 uint8_t Compare_results(uint8_t screen_side, uint8_t user_result, uint16_t current_sequence){
     uint8_t compare_val;
     uint8_t correct_sequence = Get_sequence(current_sequence, 0);
+    screening_state = VALUE;
 
     if (screen_side == 0){ // checks left side values first
     

@@ -20,32 +20,45 @@ typedef enum {
         FREQUENCY,
         RESET,
         SEED
-    } action;
+} action;
 
-    typedef enum {
-        INPUT,
-        SUCCESS,
-        GENERATE,
-        FAIL
-    } gameplay_action;
+typedef enum {
+    INPUT,
+    BUTTON,
+    COMPARE,
+    SUCCESS,
+    GENERATE,
+    FAIL
+} gameplay_action;
 
-    action state = START;
-    gameplay_action game_state = INPUT;
-    uint8_t test = 0;
-    uint8_t gg = 0b10000000;
-    uint8_t middle = 0b11110111;
-    uint8_t clock_change;
+typedef enum {
+    SETUP,
+    HALF,
+    FULL
+} pause;
 
-    uint8_t zero = 0b00001000;
-    uint8_t one = 0b01101011;
-    uint8_t two = 0b01000100;
-    uint8_t three = 0b01000001;
-    uint8_t four = 0b00100011;
-    uint8_t five = 0b00010001;
-    uint8_t six = 0b00010000;
-    uint8_t seven = 0b01011011;
-    uint8_t eight = 0b00000000;
-    uint8_t nine = 0b00000001;
+pause delay_state = SETUP;
+action state = START;
+gameplay_action game_state = INPUT;
+uint8_t test = 0;
+uint8_t gg = 0b10000000;
+uint8_t middle = 0b11110111;
+uint8_t clock_change;
+uint8_t bit_unlock;
+uint8_t running = 1;
+uint8_t change_game_state = 0;
+uint8_t pin_flag;
+
+uint8_t zero = 0b00001000;
+uint8_t one = 0b01101011;
+uint8_t two = 0b01000100;
+uint8_t three = 0b01000001;
+uint8_t four = 0b00100011;
+uint8_t five = 0b00010001;
+uint8_t six = 0b00010000;
+uint8_t seven = 0b01011011;
+uint8_t eight = 0b00000000;
+uint8_t nine = 0b00000001;
 
 
 
@@ -93,30 +106,44 @@ void Print_leaderboard(void){
 
  @param pin is used to determine which button was clicked
  */
-void Stop_button(uint8_t pin){
-    uint8_t bit_unlock = 0;
-    half = 0;
-    time = 0;
-    counting = 1;
+// void Stop_button(uint8_t pin){
+//     // uint8_t bit_unlock = 0;
+//     // half = 0;
+//     // time = 0;
+//     // counting = 1;
     
-    while(1){
-        uint8_t sample = pb_debounced_state;
+//     while(1){
+//         uint8_t sample = pb_debounced_state;
 
-        if (half == 1){
-            counting = 0;
-            time = 0;
-            bit_unlock |= PIN0_bm;
-        }
+        
 
-        if (sample &= pin){
-            bit_unlock |= PIN1_bm;
-        }
-                    
-        if (bit_unlock == 3){
-            return;
-        }
-    }
-}
+//         switch (delay_state){
+//             case SETUP:
+//                 time2 = 0; 
+//                 bit_unlock = 0;
+//                 delay_state = HALF;
+//                 break;
+//             case HALF:
+//                 if (time2 == 125){
+//                     bit_unlock |= PIN0_bm;
+//                 }
+
+//                 if (sample &= pin){
+//                     bit_unlock |= PIN1_bm;
+//                 }
+                            
+//                 if (bit_unlock == 3){
+//                     return;
+//                 }
+//                 break;            
+//             default:
+//                 delay_state = SETUP;
+//                 break;
+//         }
+
+//     }
+    
+// }
 
 /*
  gets the display digit binary value.
@@ -195,81 +222,138 @@ void Gameplay_loop(){
                 state = GAMEPLAY;
 
             break;
-
+    
             
             case GAMEPLAY:
-
             switch (game_state){
                 case INPUT:
-
+                change_game_state = 0;
+                delay_state = SETUP;
                     // waits for button press.
                     if (pb_falling_edge & PIN4_bm) {
                         Set_perif(SEGMENT_1, 0, e_high); // sets display and buzzer
-                        Stop_button(PIN4_bm); // checks that the button has been activated for x amount of time.
-                        Clear_press();
-                        
-
-                        if (Compare_results(0, SEGMENT_1, current_count) == 0){ // sends corrosponding button result and checks if that matched simon's result.
-                            current_count++; // increases users count.    
-                            game_state = SUCCESS;
-                        } else {
-                            game_state = FAIL;
-                        }
-                    } 
+                        pin_flag = PIN4_bm;
+                        game_state = BUTTON;
+                    }
 
                     else if (pb_falling_edge & PIN5_bm) {
                         Set_perif(SEGMENT_2, 0, c_sharp);
-                        Stop_button(PIN5_bm);
-                        Clear_press();
-
-                        if (Compare_results(0, SEGMENT_2, current_count) == 0){
-                            current_count++;
-                            game_state = SUCCESS;
-                        } else {
-                            game_state = FAIL;
-                        }
+                        pin_flag = PIN5_bm;
+                        game_state = BUTTON;
                     }
 
                     else if (pb_falling_edge & PIN6_bm) {
                         Set_perif(0, SEGMENT_1, a_norm);
-                        Stop_button(PIN6_bm);
-                        Clear_press();
-
-                        if (Compare_results(1, SEGMENT_1, current_count) == 0){
-                            current_count++;
-                            game_state = SUCCESS;
-                        } else {
-                            game_state = FAIL;
-                        }
+                        pin_flag = PIN6_bm;
+                        game_state = BUTTON;
                     }
 
                     else if (pb_falling_edge & PIN7_bm){
                         Set_perif(0, SEGMENT_2, e_low);
-                        Stop_button(PIN7_bm);
-                        Clear_press();
-                         
-                        if (Compare_results(1, SEGMENT_2, current_count) == 0){
-                            current_count++;
-                            game_state = SUCCESS;
-                        } else {
-                            game_state = FAIL;
-                        }
+                        pin_flag = PIN7_bm;
+                        game_state = BUTTON;
                     }
                     
-                    break;
-                
+                break;
+
+
+                case BUTTON:
+                    switch (delay_state){
+                        case SETUP:
+                            time2 = 0; 
+                            bit_unlock = 0;
+                            delay_state = HALF;
+                            break;
+                        case HALF:
+                            if (time2 == 125){
+                                bit_unlock |= PIN0_bm;
+                            }
+
+                            if (sample &= pin_flag){
+                                bit_unlock |= PIN1_bm;
+                            }
+                                        
+                            if (bit_unlock == 3){
+                                Clear_press();
+                                game_state = COMPARE;
+                            }
+                            break;            
+                        default:
+                            delay_state = SETUP;
+                            break;
+                        }
+
+
+                case COMPARE:
+                    switch (pin_flag){
+                        case PIN4_bm:
+                            if (Compare_results(0, SEGMENT_1, current_count) == 0){ // sends corrosponding button result and checks if that matched simon's result.
+                                current_count++; // increases users count.    
+                                game_state = SUCCESS;
+                            } else {
+                                game_state = FAIL;
+                            }
+                        break;
+
+                        case PIN5_bm:
+                            if (Compare_results(0, SEGMENT_2, current_count) == 0){
+                                current_count++;
+                                game_state = SUCCESS;
+                            } else {
+                                game_state = FAIL;
+                        }
+                        break;
+
+                        case PIN6_bm:
+                            if (Compare_results(1, SEGMENT_1, current_count) == 0){
+                                current_count++;
+                                game_state = SUCCESS;
+                            } else {
+                                game_state = FAIL;
+                        }
+                        break;
+
+                        case PIN7_bm:
+                            if (Compare_results(1, SEGMENT_2, current_count) == 0){
+                                current_count++;
+                                game_state = SUCCESS;
+                            } else {
+                                game_state = FAIL;
+                            }
+                        break;
+
+                        default:
+                            game_state = FAIL;
+                            break;
+                        }
+                    
+                break;
+                        
 
                 case SUCCESS:
-
+                    delay_state = SETUP;
                     if (current_count > sequence){
                         current_count = 1;
                         Set_perif(gg, gg, 0);
+                        delay_state = SETUP;
                         
-                        
-                        counting = 1;
-                        while (counting == 1);
-                        // clear
-                        game_state = GENERATE;
+                            switch (delay_state){
+                                case SETUP:
+                                    time2 = 0;
+                                    delay_state = FULL;
+                                    break;
+                                case FULL:
+                                    if (time2 == 250){
+                                        uart_puts("FULL success\n");
+                                        sequence++;
+                                        change_game_state = 0;
+                                        game_state = GENERATE;
+                                    }
+                                    break;
+                                default:
+                                    delay_state = SETUP;
+                                    break;
+                            }
                     }
                     else{
                         game_state = INPUT;
@@ -279,50 +363,101 @@ void Gameplay_loop(){
 
 
                 case GENERATE:
-                    sequence++;
-                    Screen_sequence();
-                    game_state = INPUT;
+                    change_game_state = Screen_sequence();
+                    if (change_game_state == 1){
+                        game_state = INPUT;
+                    }
                     break;
 
 
                 case FAIL:
-                    Set_perif(middle, middle, 0);
-                    counting = 1;
-                    while (counting == 1);
-                    Set_perif(CLEAR, CLEAR, 0);
-                    uint8_t temp = Get_sequence(sequence, 1);
+                    // Set_perif(middle, middle, 0);
                     
-                    // leaderboard needs to be displayed here
-
-                    // check if score is over 100 and gets rid of nums over 99.
-                    while (1){
-                        if (sequence >= 100){
-                            sequence -= 100;
-                        }
-                        break;
-                    }
-
-                    // Gets the tenth value and the left over becomes the right value
-                    while (1){
-                        if (sequence >= 90 && (!(sequence < 10))){
-                            left_side++;
-                            sequence -= 10;
-                        }
-                        break;
-                    }
-                    // left side will be left_side and right side will be sequence
-
-                    // display score
-                    if (left_side == 0){
-                        Set_perif(0, Get_screen_digit(sequence), 0);
-                    }
-                    else{
-                        Set_perif(Get_screen_digit(left_side), Get_screen_digit(sequence), 0);
-                    }
+                    //     switch (delay_state){
+                    //         case SETUP:
+                    //             time2 = 0;
+                    //             delay_state = FULL;
+                    //             break;
+                    //         case FULL:
+                    //             if (time2 == 250){
+                    //                 running = 0;
+                    //             }
+                    //             break;
+                    //         default:
+                    //             delay_state = SETUP;
+                    //             break;
+                        
+                    //     }
+                    //     running = 1;
+                    //     delay_state = SETUP;
                     
-                    Set_perif(CLEAR, CLEAR, 0);
+                    // uint8_t temp = Get_sequence(sequence, 1);
+                    // while(running){
+                    //         switch (delay_state){
+                    //             case SETUP:
+                    //                 time2 = 0;
+                    //                 delay_state = FULL;
+                    //                 break;
+                    //             case FULL:
+                    //                 if (time2 == 250){
+                    //                     running = 0;
+                    //                 }
+                    //                 break;
+                    //             default:
+                    //                 delay_state = SETUP;
+                    //                 break;
+                    //         }
+                    //     }
+                    //     running = 1;
+                    //     delay_state = SETUP;
+                    // // leaderboard needs to be displayed here
 
-                    // playback timer
+                    // // check if score is over 100 and gets rid of nums over 99.
+                    // // while (1){
+                    // //     if (sequence >= 100){
+                    // //         sequence -= 100;
+                    // //     }
+                    // //     break;
+                    // // }
+
+                    // // // Gets the tenth value and the left over becomes the right value
+                    // // while (1){
+                    // //     if (sequence >= 90 && (!(sequence < 10))){
+                    // //         left_side++;
+                    // //         sequence -= 10;
+                    // //     }
+                    // //     break;
+                    // // }
+                    // // left side will be left_side and right side will be sequence
+
+                    // // display score
+                    // if (left_side == 0){
+                    //     Set_perif(0, Get_screen_digit(sequence), 0);
+                    // }
+                    // else{
+                    //     Set_perif(Get_screen_digit(left_side), Get_screen_digit(sequence), 0);
+                    // }
+                    
+
+                    // // playback timer
+                    // while(running){
+                    //         switch (delay_state){
+                    //             case SETUP:
+                    //                 time2 = 0;
+                    //                 delay_state = FULL;
+                    //                 break;
+                    //             case FULL:
+                    //                 if (time2 == 250){
+                    //                     running = 0;
+                    //                 }
+                    //                 break;
+                    //             default:
+                    //                 delay_state = SETUP;
+                    //                 break;
+                    //         }
+                    //     }
+                    //     running = 1;
+                    //     delay_state = SETUP;
                     
                     state = END;
                     break;
