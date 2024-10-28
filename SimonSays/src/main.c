@@ -94,27 +94,25 @@ void Print_leaderboard(void){
  @param pin is used to determine which button was clicked
  */
 void Stop_button(uint8_t pin){
-    uint8_t temp_clock;
     uint8_t bit_unlock = 0;
-    time = 0x0;
-    temp_clock = clock;
+    half = 0;
+    time = 0;
     counting = 1;
-
+    
     while(1){
         uint8_t sample = pb_debounced_state;
 
-        if (clock != temp_clock){
-            bit_unlock |= PIN0_bm;
+        if (half == 1){
             counting = 0;
+            time = 0;
+            bit_unlock |= PIN0_bm;
         }
 
         if (sample &= pin){
             bit_unlock |= PIN1_bm;
-            
         }
                     
         if (bit_unlock == 3){
-            Clear_press();
             return;
         }
     }
@@ -208,10 +206,11 @@ void Gameplay_loop(){
                     if (pb_falling_edge & PIN4_bm) {
                         Set_perif(SEGMENT_1, 0, e_high); // sets display and buzzer
                         Stop_button(PIN4_bm); // checks that the button has been activated for x amount of time.
+                        Clear_press();
+                        
 
                         if (Compare_results(0, SEGMENT_1, current_count) == 0){ // sends corrosponding button result and checks if that matched simon's result.
-                            current_count++; // increases users count.
-                            
+                            current_count++; // increases users count.    
                             game_state = SUCCESS;
                         } else {
                             game_state = FAIL;
@@ -221,6 +220,7 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN5_bm) {
                         Set_perif(SEGMENT_2, 0, c_sharp);
                         Stop_button(PIN5_bm);
+                        Clear_press();
 
                         if (Compare_results(0, SEGMENT_2, current_count) == 0){
                             current_count++;
@@ -233,6 +233,7 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN6_bm) {
                         Set_perif(0, SEGMENT_1, a_norm);
                         Stop_button(PIN6_bm);
+                        Clear_press();
 
                         if (Compare_results(1, SEGMENT_1, current_count) == 0){
                             current_count++;
@@ -245,6 +246,7 @@ void Gameplay_loop(){
                     else if (pb_falling_edge & PIN7_bm){
                         Set_perif(0, SEGMENT_2, e_low);
                         Stop_button(PIN7_bm);
+                        Clear_press();
                          
                         if (Compare_results(1, SEGMENT_2, current_count) == 0){
                             current_count++;
@@ -253,18 +255,23 @@ void Gameplay_loop(){
                             game_state = FAIL;
                         }
                     }
+                    
                     break;
                 
 
                 case SUCCESS:
 
                     if (current_count > sequence){
+                        current_count = 1;
                         Set_perif(gg, gg, 0);
-                        Pause();
+                        
+                        
+                        counting = 1;
+                        while (counting == 1);
+                        // clear
                         game_state = GENERATE;
                     }
                     else{
-                        Pause();
                         game_state = INPUT;
                     }
                     
@@ -273,7 +280,6 @@ void Gameplay_loop(){
 
                 case GENERATE:
                     sequence++;
-                    current_count = 1;
                     Screen_sequence();
                     game_state = INPUT;
                     break;
@@ -281,9 +287,11 @@ void Gameplay_loop(){
 
                 case FAIL:
                     Set_perif(middle, middle, 0);
-
+                    counting = 1;
+                    while (counting == 1);
+                    Set_perif(CLEAR, CLEAR, 0);
                     uint8_t temp = Get_sequence(sequence, 1);
-                    Pause();
+                    
                     // leaderboard needs to be displayed here
 
                     // check if score is over 100 and gets rid of nums over 99.
@@ -311,6 +319,8 @@ void Gameplay_loop(){
                     else{
                         Set_perif(Get_screen_digit(left_side), Get_screen_digit(sequence), 0);
                     }
+                    
+                    Set_perif(CLEAR, CLEAR, 0);
 
                     // playback timer
                     
@@ -328,7 +338,6 @@ void Gameplay_loop(){
             break;
 
             case END:
-                Pause();
                 current_count = 1;
                 sequence = 1;
                 game_state = INPUT;

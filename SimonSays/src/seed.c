@@ -18,10 +18,10 @@ volatile uint32_t a_norm = 7974; // 418
 volatile uint32_t e_low = 21231; // 157
 volatile uint8_t first_digit = 0b01111111; 
 volatile uint8_t second_digit = 0b1111111;
-volatile uint8_t clock = 0;
 
 uint8_t SEGMENT_1 = 0b00111110;
 uint8_t SEGMENT_2 = 0b01101011;
+uint8_t firstBuzz = 0;
 
 
 volatile uint8_t sequence = 1;
@@ -68,8 +68,20 @@ void Set_right_digit(uint8_t digit){
     @param note sets buzzer sound
 */
 void Set_buzzer(uint32_t note){
+    // if (firstBuzz == 0){
+    //     firstBuzz++;
+    // }
+    // else if (firstBuzz == 1){
+    //     time2 = 0;
+    //     counting2 = 1;
+    //     while (counting2 == 1);
+        
+            
+        
+    // }
+
     if (note == 0){ // shifting cmp0buf if note == 0 could cause weird errors.
-        TCA0.SINGLE.PERBUF = note;
+        //TCA0.SINGLE.PERBUF = note;
         TCA0.SINGLE.CMP0BUF = note;
         return;
     }
@@ -87,8 +99,6 @@ sets all displays and buzzer
 */
 void Set_perif(uint8_t left, uint8_t right, uint32_t note){
     
-    Set_buzzer(note);
-    
 
     if (left != 0){
         Set_left_digit(left);
@@ -97,6 +107,8 @@ void Set_perif(uint8_t left, uint8_t right, uint32_t note){
     if (right!= 0){ // 0 is used as an ignore value instead of off.
         Set_right_digit(right);
     }
+
+    Set_buzzer(note);
     
 }
 
@@ -165,9 +177,12 @@ void Screen_sequence(void){
             Set_perif(0, SEGMENT_2, e_low);
             
         }
-        Pause();
-        Clear_press(); 
-        Pause();
+        time = 0;
+        half = 0;
+        counting = 1;
+        while (half == 0);
+        Clear_press();
+        while (counting == 1);
     }
     //Clear_press();
 }

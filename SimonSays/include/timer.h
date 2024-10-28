@@ -2,6 +2,9 @@
 
 extern volatile uint16_t time;
 extern volatile uint8_t counting;
+extern volatile uint8_t half;
+extern volatile uint8_t time2;
+extern volatile uint8_t counting2;
 
 void timer_init(void);
 void button_timer_init(void);
