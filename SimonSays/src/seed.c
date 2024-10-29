@@ -188,16 +188,15 @@ uint8_t Screen_sequence(void){
 
             case SHOWING:
             //uart_puts("state SHOWING\n");
-                if (time2 == 125){
+                if (time2 == (250 >> 1)){
                     Clear_press();
-                    time2 = 0;
                     screening_state = HIDING;
                 }
                 return 0;
                 break;
             case HIDING:
             //uart_puts("state HIDING\n");
-                if (time2 == 125){
+                if (time2 == (250)){
                     screening_state = END;
                 }
                 return 0;

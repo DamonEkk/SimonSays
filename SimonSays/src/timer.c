@@ -53,23 +53,6 @@ ISR(TCB1_INT_vect){
      uint16_t scaled = 250 + (((uint32_t) ADC0_RESULT * (1000-250)) >> 8);
      time2++;
 
-    // if (counting == 1){
-    //     time++;
-        
-    //     // if (time < (scaled >> 1)){
-    //     //     uart_puts("counting");
-    //     // }
-    //     if (time == (scaled >> 1)){ // 200 = 1 sec (0.25-2seconds) 50-400
-    //         half = 1;
-            
-    //     }
-    //     else if (time >= scaled){ 
-    //         time = 0;
-    //         half = 0;
-    //         counting = 0;
-                        
-    //     }
-    // }
     TCB1.INTFLAGS = TCB_CAPT_bm; // clear flag
 }
 

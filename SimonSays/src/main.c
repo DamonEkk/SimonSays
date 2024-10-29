@@ -27,6 +27,7 @@ typedef enum {
     BUTTON,
     COMPARE,
     SUCCESS,
+    DELAY,
     GENERATE,
     FAIL
 } gameplay_action;
@@ -217,18 +218,19 @@ void Gameplay_loop(){
         
         switch (state){
             case START:
-                Screen_sequence(); // plays game results.
-                game_state = INPUT;
-                state = GAMEPLAY;
-
+                change_game_state = Screen_sequence();  // plays game results.
+                if (change_game_state == 1){
+                    game_state = INPUT;
+                    state = GAMEPLAY;
+                }
             break;
     
             
             case GAMEPLAY:
             switch (game_state){
                 case INPUT:
-                change_game_state = 0;
-                delay_state = SETUP;
+                    change_game_state = 0;
+                    delay_state = SETUP;
                     // waits for button press.
                     if (pb_falling_edge & PIN4_bm) {
                         Set_perif(SEGMENT_1, 0, e_high); // sets display and buzzer
@@ -265,11 +267,16 @@ void Gameplay_loop(){
                             delay_state = HALF;
                             break;
                         case HALF:
-                            if (time2 == 125){
+                            sample = pb_debounced_state;
+                            
+
+                            if (time2 == (250 >> 1)){
+                                
                                 bit_unlock |= PIN0_bm;
                             }
 
                             if (sample &= pin_flag){
+                                
                                 bit_unlock |= PIN1_bm;
                             }
                                         
@@ -282,9 +289,11 @@ void Gameplay_loop(){
                             delay_state = SETUP;
                             break;
                         }
+                    break;
 
 
                 case COMPARE:
+
                     switch (pin_flag){
                         case PIN4_bm:
                             if (Compare_results(0, SEGMENT_1, current_count) == 0){ // sends corrosponding button result and checks if that matched simon's result.
@@ -316,6 +325,7 @@ void Gameplay_loop(){
                         case PIN7_bm:
                             if (Compare_results(1, SEGMENT_2, current_count) == 0){
                                 current_count++;
+                                time2 = 0;
                                 game_state = SUCCESS;
                             } else {
                                 game_state = FAIL;
@@ -331,35 +341,42 @@ void Gameplay_loop(){
                         
 
                 case SUCCESS:
-                    delay_state = SETUP;
                     if (current_count > sequence){
                         current_count = 1;
                         Set_perif(gg, gg, 0);
                         delay_state = SETUP;
-                        
-                            switch (delay_state){
-                                case SETUP:
-                                    time2 = 0;
-                                    delay_state = FULL;
-                                    break;
-                                case FULL:
-                                    if (time2 == 250){
-                                        uart_puts("FULL success\n");
-                                        sequence++;
-                                        change_game_state = 0;
-                                        game_state = GENERATE;
-                                    }
-                                    break;
-                                default:
-                                    delay_state = SETUP;
-                                    break;
-                            }
+                        game_state = DELAY;
                     }
-                    else{
-                        game_state = INPUT;
-                    }
-                    
+
+                    else {
+                         game_state = INPUT;
+                     }
+
+                break;
+
+                case DELAY:
+
+                switch (delay_state){
+                    case SETUP:
+                        time2 = 0;
+                        delay_state = FULL;
+
                     break;
+                    case FULL:
+                        if (time2 == 250){
+                            sequence++;
+                            change_game_state = 0;
+                            Clear_press();
+                            game_state = GENERATE;
+                        }
+
+                    break;
+                    default:
+                        delay_state = SETUP;
+                    break;
+                    } 
+                    
+                break;
 
 
                 case GENERATE:
@@ -367,7 +384,7 @@ void Gameplay_loop(){
                     if (change_game_state == 1){
                         game_state = INPUT;
                     }
-                    break;
+                break;
 
 
                 case FAIL:
