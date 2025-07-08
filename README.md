@@ -14,4 +14,4 @@
 <p>Load software onto board using a micro usb connector. </p>
 <p>Click start to play</p>
 <h2>TODO</h2>
-<p>MISO connection will with a computer will be added so then a keyboard can play the game instead of the buttons.</p>
+<p>MISO connection with a computer will be added so then a keyboard can play the game instead of the buttons.</p>
